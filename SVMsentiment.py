@@ -10,8 +10,24 @@ import jieba
 from sklearn.preprocessing import scale
 from sklearn.externals import joblib
 from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from openpyxl import load_workbook
 from sklearn.decomposition import PCA
+
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import Perceptron
+from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.model_selection import learning_curve
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC, LinearSVC
+from sklearn.tree import DecisionTreeClassifier
+
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 import sys
@@ -42,7 +58,7 @@ def dataPreProcess():
         post = neg_sheet.cell(row=i, column=1).value
         # p2 = neg_sheet.cell(row=i, column=7).value
         # post = str(p1) + '，' + str(p2)
-        post = post.replace('\n', '')
+        post = str(post).replace('\n', '')
         post = post.replace(' ', '')
         post = post.strip()
         neg_words.append(wordCutAndRemoveStopWords(post))
@@ -53,7 +69,7 @@ def dataPreProcess():
         post = pos_sheet.cell(row=i, column=1).value
         # p2 = pos_sheet.cell(row=i, column=7).value
         # post = str(p1) + '，' + str(p2)
-        post = post.replace('\n', '')
+        post = str(post).replace('\n', '')
         post = post.replace(' ', '')
         post = post.strip()
         pos_words.append(wordCutAndRemoveStopWords(post))
@@ -98,10 +114,11 @@ def buildWordVector(text, size, model_w2v):
             count += 1.
         except KeyError:
             continue
-    # print vec--                                                                               (2)
-    # if count != 0:
-    #     vec /= count
+    # print vec--                                                                               (2)归一化
+    if count != 0:
+        vec /= count
     # print vec
+    # vec  = scale(vec)
     return vec
 
 
@@ -144,10 +161,62 @@ def get_data():
 
 ##训练svm模型
 def svm_train(train_vecs, y_train, test_vecs, y_test):
-    clf = SVC(kernel='linear',  verbose=True)#------------------------（4）换成线性拟合效果变成93%,径向基内核80%，
+    clf = SVC(kernel='rbf',  verbose=True)#------------------------（4）换成线性拟合效果变成93%,径向基内核80%，
     clf.fit(train_vecs, y_train)
-    joblib.dump(clf, 'svm_data/svm_model.pkl')
-    print clf.score(test_vecs, y_test)
+    joblib.dump(clf, 'svm_data/SVC-rbf_model.pkl')
+    print clf.score(test_vecs, y_test),'SVC-rbf'
+
+    clf = LinearSVC()  # ------------------------（4）换成线性拟合效果变成93%,径向基内核80%，
+    clf.fit(train_vecs, y_train)
+    joblib.dump(clf, 'svm_data/SVC-linear_model.pkl')
+    print clf.score(test_vecs, y_test), 'SVC-linear'
+
+    clf1 = LogisticRegression()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/logistc_model.pkl')
+    print clf1.score(test_vecs, y_test), 'Logistic'
+
+    clf1 = AdaBoostClassifier()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/AdaBoostClassifier_model.pkl')
+    print clf1.score(test_vecs, y_test), 'AdaBoostClassifier'
+
+    clf1 = RandomForestClassifier()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/RandomForestClassifier_model.pkl')
+    print clf1.score(test_vecs, y_test), 'RandomForestClassifier'
+
+    clf1 = KNeighborsClassifier()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/lKNeighborsClassifier_model.pkl')
+    print clf1.score(test_vecs, y_test), 'KNeighborsClassifier'
+
+    clf1 = GaussianNB()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/GaussianNB_model.pkl')
+    print clf1.score(test_vecs, y_test), 'GaussianNB'
+
+    clf1 = SGDClassifier()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/SGDClassifier_model.pkl')
+    print clf1.score(test_vecs, y_test), 'SGDClassifier'
+
+    clf1 = DecisionTreeClassifier()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/DecisionTreeClassifier_model.pkl')
+    print clf1.score(test_vecs, y_test), 'DecisionTreeClassifier'
+
+    clf1 = Perceptron()
+    clf1.fit(train_vecs, y_train)
+    joblib.dump(clf1, 'svm_data/Perceptron_model.pkl')
+    print clf1.score(test_vecs, y_test), 'Perceptron'
+
+
+
+
+
+
+
 
 
 ##得到待预测单个句子的词向量
@@ -167,7 +236,7 @@ def svm_predict(string):
     #     print word
     words_vecs = get_predict_vecs(words)
     # print words_vecs
-    clf = joblib.load('svm_data/svm_model.pkl')
+    clf = joblib.load('svm_data/RandomForestClassifier_model.pkl')
 
     result = clf.predict(words_vecs)
     # print type(result),len(result),result[0]
@@ -206,16 +275,18 @@ if __name__ == '__main__':
     # # for it in x_train:
     # #     for i in range(len(it)):
     # #         print it[i]
-    #
+
+
+    # x_train,x_test=dataPreProcess()
     # get_train_vecs(x_train,x_test) #计算词向量并保存为train_vecs.npy,test_vecs.npy
     # train_vecs,y_train,test_vecs,y_test=get_data()#导入训练数据和测试数据
     # svm_train(train_vecs,y_train,test_vecs,y_test)#训练svm并保存模型
-    #
+
     # clf = joblib.load('svm_data/svm_model.pkl')
     # print clf.score(test_vecs, y_test)
     ##对输入句子情感进行判断
     string = u'不开心不开心不开心不开心不开心不开心不开心'  #-                         ？这是个问题？
-    string1=u'很开心'
+    string1 = u'很开心'
     svm_predict(string)
     svm_predict(string1)
     # for i in range(2,20):
@@ -231,3 +302,5 @@ if __name__ == '__main__':
 
 #1词向量到句向量这块的算法
 #2分类的模型换一换以及模型的参数
+
+

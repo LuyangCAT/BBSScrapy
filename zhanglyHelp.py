@@ -54,16 +54,19 @@ wb.save('/Users/SonnyCAO/Desktop/data_%s.xlsx' % '张')
 
 wb1 = Workbook()
 sheet1 = wb1.active
-wb2 = load_workbook('/Users/SonnyCAO/Desktop/總資產.xlsx')
-sheet2 = wb2.active
+wb2 = load_workbook('/Users/SonnyCAO/Desktop/qqw.xlsx')
+# sheet2 = wb2.get_sheet_by_name('q1')
+
+sheet2  = wb2.get_sheet_by_name('q1')
 p=2
 for i in range(2,sheet2.max_row+1):
     j=3
     while (j<8):
-        sheet1.cell(row=p, column=1).value = i-1
-        sheet1.cell(row=p, column=2).value = sheet2.cell(row=i, column=2).value
-        sheet1.cell(row=p, column=3).value = sheet2.cell(row=i, column=3).value
-        sheet1.cell(row=p, column=4).value = '201%d1231' % j
+        # sheet1.cell(row=p, column=1).value = sheet2.cell(row=i, column=3).value
+        # sheet1.cell(row=p, column=2).value = sheet2.cell(row=i, column=4).value
+        # sheet1.cell(row=p, column=3).value = sheet2.cell(row=i, column=6).value
+        sheet1.cell(row=p, column=4).value = sheet2.cell(row=i, column=1).value
+        sheet1.cell(row=p, column=5).value = sheet2.cell(row=i, column=2).value
         j=j+1
         p = p + 1
-wb1.save('/Users/SonnyCAO/Desktop/總資產_%s.xlsx' % '张')
+wb1.save('/Users/SonnyCAO/Desktop/伶妤_%s.xlsx' % '张')
